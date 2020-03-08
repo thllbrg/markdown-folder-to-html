@@ -3,6 +3,8 @@ import markdownIt from "markdown-it";
 import markdownItAnchor from "markdown-it-anchor";
 import mdUrl from "./markdown-url-to-html";
 
+import metadataParser from './markdown-yaml-metadata-parser';
+
 const markdown = markdownIt({
   html: true,
   linkify: true,
@@ -38,7 +40,12 @@ function transformLocalMdLinksToHTML(md: any) {
 }
 
 export default function md2html(contents: string) {
-  return markdown.render(contents);
+  //return markdown.render(contents);
+  return metadataParser(source)[1]
+}
+
+export default function md2yaml(contents: string) {
+  return metadataParser(source)[0];
 }
 
 function localMarkdownLinkToHtmlLink(hrefAttr: string) {
