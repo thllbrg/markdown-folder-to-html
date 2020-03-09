@@ -1,6 +1,5 @@
 import test from "tape";
-
-import md2html from "../lib/markdown-to-html";
+import { md2html, md2yaml } from "../lib/markdown-to-html";
 
 test("transforms markdown to html", t => {
   t.equal(

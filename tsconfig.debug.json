@@ -9,6 +9,8 @@
     ],
     "strict": true,
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "outDir": "out",
+    "sourceMap": true
   }
 }

@@ -7,7 +7,7 @@ import sh from "shelljs";
 import groupByPath from "./lib/group-by-path";
 import sortByPreferences from "./lib/sort-by-preferences";
 import mdUrl from "./lib/markdown-url-to-html";
-import md2html from "./lib/markdown-to-html";
+import { md2html, md2yaml } from "./lib/markdown-to-html";
 import renderNav from "./lib/render-nav";
 import generateIndexInfo from "./lib/generate-index-info";
 import page from "./lib/render-page";
@@ -68,7 +68,8 @@ const mds = all
       path: file,
       url: mdUrl(file),
       content,
-      html: md2html(content)
+      html: md2html(content),
+      metadata: md2yaml(content)
     };
   });
 
@@ -77,9 +78,9 @@ const groupedMds: FileTree<StringFile> = mds.reduce(
   []
 );
 
-mds.forEach(({ path, url, html }) => {
+mds.forEach(({ path, url, html, metadata }) => {
   const navHtml = renderNav(generateIndexInfo(path, groupedMds));
-  const pageHtml = page(tpl, navHtml, html);
+  const pageHtml = page(tpl, navHtml, html, metadata);
   fs.writeFileSync(url, pageHtml);
 });
 

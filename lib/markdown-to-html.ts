@@ -3,7 +3,7 @@ import markdownIt from "markdown-it";
 import markdownItAnchor from "markdown-it-anchor";
 import mdUrl from "./markdown-url-to-html";
 
-import metadataParser from './markdown-yaml-metadata-parser';
+const metadataParser = require('markdown-yaml-metadata-parser');
 
 const markdown = markdownIt({
   html: true,
@@ -20,10 +20,10 @@ const markdown = markdownIt({
 function transformLocalMdLinksToHTML(md: any) {
   const defaultLinkOpenRender =
     md.renderer.rules.link_open ||
-    function(tokens: any, idx: any, options: any, env: any, self: any) {
+    function (tokens: any, idx: any, options: any, env: any, self: any) {
       return self.renderToken(tokens, idx, options);
     };
-  md.renderer.rules.link_open = function(
+  md.renderer.rules.link_open = function (
     tokens: any,
     idx: any,
     options: any,
@@ -39,13 +39,14 @@ function transformLocalMdLinksToHTML(md: any) {
   };
 }
 
-export default function md2html(contents: string) {
+export function md2html(contents: string) {
   //return markdown.render(contents);
-  return metadataParser(source)[1]
+  //console.log(metadataParser(contents));
+  return markdown.render(metadataParser(contents).content);
 }
 
-export default function md2yaml(contents: string) {
-  return metadataParser(source)[0];
+export function md2yaml(contents: string) {
+  return metadataParser(contents).metadata;
 }
 
 function localMarkdownLinkToHtmlLink(hrefAttr: string) {

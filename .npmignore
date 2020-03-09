@@ -3,3 +3,4 @@ docs/*
 _docs/
 test/
 .travis.yml
+out/
