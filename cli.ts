@@ -15,92 +15,103 @@ import mdR from "./lib/markdown-regex";
 import { FileTree, StringFile } from "./lib/types";
 
 const [docsFolder, ...argsRest] = process.argv.slice(2);
+const [...newPage] = process.argv.slice(2);
 
 // Default parameters
 const defaultFolder = "docs";
 const folder = path.resolve(docsFolder || defaultFolder);
 const output = path.resolve(folder, "..", `_${path.basename(folder)}`);
 const templateFilename = "template.html";
+const mdTemplateFilename = "md-template.md";
 const contentsFilename = "contents.json";
 const preferences = ["index.md", "README.md"];
 
-// Guards
-// Bail out if more than 1 args
-if (argsRest && argsRest.length > 0) {
-  console.error("Too may arguments");
-  usage(true);
-}
+if (newPage && newPage.length === 2 && newPage[0] === 'page') {
+  fs.copyFile('./docs/md-template.md', `./docs/${newPage[1]}`, () => {
+    process.exit(0);
+  });
+} else {
 
-// Bail out if the folder doesn't exist
-if (!fs.existsSync(folder)) {
-  console.error(`Folder ${folder} not found.`);
-  usage(true);
-}
+  // Guards
+  // Bail out if more than 1 args
+  if (argsRest && argsRest.length > 0) {
+    console.error("Too many arguments");
+    usage(true);
+  }
 
-// Define template html, user's first, otherwise default
-let template = path.join(folder, templateFilename);
-if (!fs.existsSync(template)) {
-  template = path.join(__dirname, defaultFolder, templateFilename);
-}
-const tpl = fs.readFileSync(template, "utf8");
+  // Bail out if the folder doesn't exist
+  if (!fs.existsSync(folder)) {
+    console.error(`Folder ${folder} not found.`);
+    usage(true);
+  }
 
-// Prepare output folder (create, clean, copy sources)
-fs.mkdirSync(output, { recursive: true });
-sh.rm("-rf", path.join(output, "*"));
-sh.cp("-R", path.join(folder, "*"), output);
+  // Define template html, user's first, otherwise default
+  let template = path.join(folder, templateFilename);
+  if (!fs.existsSync(template)) {
+    template = path.join(__dirname, defaultFolder, templateFilename);
+  }
+  const tpl = fs.readFileSync(template, "utf8");
 
-// Start processing. Outline:
-//
-// 1. Get all files
-// 2. Sort them
-// 3. Group them hierachically
-// 4. Parse files and generate output html files
+  // Prepare output folder (create, clean, copy sources)
+  fs.mkdirSync(output, { recursive: true });
+  sh.rm("-rf", path.join(output, "*"));
+  sh.cp("-R", path.join(folder, "*"), output);
 
-sh.cd(output);
-const all = sh.find("*");
+  // Start processing. Outline:
+  //
+  // 1. Get all files
+  // 2. Sort them
+  // 3. Group them hierachically
+  // 4. Parse files and generate output html files
 
-const mds = all
-  .filter(file => file.match(mdR))
-  .sort(sortByPreferences.bind(null, preferences))
-  .map(file => {
-    const content = sh.cat(file).toString(); // The result is a weird not-string
-    return {
-      path: file,
-      url: mdUrl(file),
-      content,
-      html: md2html(content),
-      metadata: md2yaml(content)
-    };
+  sh.cd(output);
+  const all = sh.find("*");
+
+  const mds = all
+    .filter(file => file.match(mdR))
+    .sort(sortByPreferences.bind(null, preferences))
+    .map(file => {
+      const content = sh.cat(file).toString(); // The result is a weird not-string
+      return {
+        path: file,
+        url: mdUrl(file),
+        content,
+        html: md2html(content),
+        metadata: md2yaml(content)
+      };
+    });
+
+  const groupedMds: FileTree<StringFile> = mds.reduce(
+    (grouped: FileTree<StringFile>, value) => groupByPath(grouped, value.path),
+    []
+  );
+
+  mds.forEach(({ path, url, html, metadata }) => {
+    const navHtml = renderNav(generateIndexInfo(path, groupedMds));
+    const pageHtml = page(tpl, navHtml, html, metadata);
+    fs.writeFileSync(url, pageHtml);
   });
 
-const groupedMds: FileTree<StringFile> = mds.reduce(
-  (grouped: FileTree<StringFile>, value) => groupByPath(grouped, value.path),
-  []
-);
+  const contentsJSON = {
+    paths: groupedMds,
+    contents: mds.map((md, i) => ({ ...md, id: i }))
+  };
+  fs.writeFileSync(contentsFilename, JSON.stringify(contentsJSON, null, 2));
 
-mds.forEach(({ path, url, html, metadata }) => {
-  const navHtml = renderNav(generateIndexInfo(path, groupedMds));
-  const pageHtml = page(tpl, navHtml, html, metadata);
-  fs.writeFileSync(url, pageHtml);
-});
+  sh.rm("-r", "**/*.md");
 
-const contentsJSON = {
-  paths: groupedMds,
-  contents: mds.map((md, i) => ({ ...md, id: i }))
-};
-fs.writeFileSync(contentsFilename, JSON.stringify(contentsJSON, null, 2));
-
-sh.rm("-r", "**/*.md");
-
-function usage(error: boolean) {
-  console.log(
-    `
-Usage:
+  function usage(error: boolean) {
+    console.log(
+      `
+  Usage:
 
   markdown-folder-to-html [input-folder]
+  input-folder [optional] defaults to \`docs\`
 
-    input-folder [optional] defaults to \`docs\`
+  markdown-folder-to-html page [output-file]
+  output-file [required]
   `
-  );
-  process.exit(error ? 1 : 0);
+    );
+    process.exit(error ? 1 : 0);
+  }
 }

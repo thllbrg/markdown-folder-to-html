@@ -12,6 +12,10 @@
         "<node_internals>/**"
       ],
       "program": "${workspaceFolder}\\cli.ts",
+      "args": [
+        "page",
+        "a-folder/newfile.md"
+      ],
       "preLaunchTask": "tsc: build - tsconfig.debug.json",
       "outFiles": [
         "${workspaceFolder}/**/*.js"
