@@ -18,16 +18,19 @@ const [docsFolder, ...argsRest] = process.argv.slice(2);
 const [...newPage] = process.argv.slice(2);
 
 // Default parameters
-const defaultFolder = "docs";
+const defaultFolder = "markdown";
+const outputFolder = "./public";
 const folder = path.resolve(docsFolder || defaultFolder);
-const output = path.resolve(folder, "..", `_${path.basename(folder)}`);
+const output = path.resolve(folder, "..", outputFolder);
+const templateFolder = "templates";
 const templateFilename = "template.html";
 const mdTemplateFilename = "md-template.md";
 const contentsFilename = "contents.json";
 const preferences = ["index.md", "README.md"];
 
 if (newPage && newPage.length === 2 && newPage[0] === 'page') {
-  fs.copyFile('./docs/md-template.md', `./docs/${newPage[1]}`, () => {
+  console.log(`${folder}`);
+  fs.copyFile(`./${templateFolder}/md-template.md`, `./${defaultFolder}/${newPage[1]}`, () => {
     process.exit(0);
   });
 } else {
@@ -46,9 +49,9 @@ if (newPage && newPage.length === 2 && newPage[0] === 'page') {
   }
 
   // Define template html, user's first, otherwise default
-  let template = path.join(folder, templateFilename);
+  let template = path.join(`./${templateFolder}`, templateFilename);
   if (!fs.existsSync(template)) {
-    template = path.join(__dirname, defaultFolder, templateFilename);
+    template = path.join(__dirname, defaultFolder, templateFolder, templateFilename);
   }
   const tpl = fs.readFileSync(template, "utf8");
 
