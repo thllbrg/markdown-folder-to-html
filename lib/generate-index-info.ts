@@ -1,8 +1,8 @@
 import path from "path";
-import pathToText from "./path-to-text";
-import mdUrl from "./markdown-url-to-html";
-import { FileTree, StringFile, IndexFile, FileNode } from "./types";
 import assertNever from "./assert-never";
+import mdUrl from "./markdown-url-to-html";
+import pathToText from "./path-to-text";
+import { FileNode, FileTree, IndexFile, StringFile } from "./types";
 
 export default function generateIndexInfo(
   currentFile: string,

@@ -1,12 +1,14 @@
-import { stringify } from "querystring";
-
 const contentS = "<!--CONTENT-->";
 const navS = "<!--NAV-->";
+const navTopicsS = "<!--NAVTOPICS-->";
+const navPostsS = "<!--NAV-POSTS-->";
 const metadataS = "<!--METADATA-->";
 
 export default function renderPage(
   template: string,
   navmenu: string,
+  navTopicsHtml: string,
+  navPostsHtml: string,
   content: string,
   metadata: object
 ) {
@@ -19,9 +21,12 @@ export default function renderPage(
     .split(metadataS)
     .join(header)
     .split(contentS)
-    .join(content);
+    .join(content)
+    .split(navTopicsS)
+    .join(navTopicsHtml)
+    .split(navPostsS)
+    .join(navPostsHtml);
 }
-
 
 function generateMetadata(metadata: any) {
   let head = '';

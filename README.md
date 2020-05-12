@@ -162,3 +162,23 @@ relied on simple concepts. That is what this tool does:
 
 - https://github.com/joakin/markdown-folder-to-html
 - https://npmjs.org/package/markdown-folder-to-html
+
+
+top menu -> only level 1 folders - categories
+sub menu -> topics (sort by most posts)
+category menu -> last 8 posts, with possibility to expand
+related posts -> read from contents.json
+
+code highlighting
+- javascript
+- css
+- typescript
+- cmd/bash
+- json
+- c#
+
+configurable components
+comparison table 2 different products
+1 highlighted product
+
+read links from links.json, affiliate name, product name, product link, product image small, product image large.

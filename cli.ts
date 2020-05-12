@@ -3,16 +3,16 @@
 import fs from "fs";
 import path from "path";
 import sh from "shelljs";
-
-import groupByPath from "./lib/group-by-path";
-import sortByPreferences from "./lib/sort-by-preferences";
-import mdUrl from "./lib/markdown-url-to-html";
-import { md2html, md2yaml } from "./lib/markdown-to-html";
-import renderNav from "./lib/render-nav";
 import generateIndexInfo from "./lib/generate-index-info";
-import page from "./lib/render-page";
+import groupByPath from "./lib/group-by-path";
 import mdR from "./lib/markdown-regex";
+import { md2html, md2yaml } from "./lib/markdown-to-html";
+import mdUrl from "./lib/markdown-url-to-html";
+import { renderPagesNav, renderTopicNav, renderTopNav } from "./lib/render-nav";
+import page from "./lib/render-page";
+import sortByPreferences from "./lib/sort-by-preferences";
 import { FileTree, StringFile } from "./lib/types";
+
 
 const [docsFolder, ...argsRest] = process.argv.slice(2);
 const [...newPage] = process.argv.slice(2);
@@ -30,7 +30,7 @@ const preferences = ["index.md", "README.md"];
 
 if (newPage && newPage.length === 2 && newPage[0] === 'page') {
   console.log(`${folder}`);
-  fs.copyFile(`./${templateFolder}/md-template.md`, `./${defaultFolder}/${newPage[1]}`, () => {
+  fs.copyFile(`./${templateFolder}/${mdTemplateFilename}`, `./${defaultFolder}/${newPage[1]}`, () => {
     process.exit(0);
   });
 } else {
@@ -88,10 +88,11 @@ if (newPage && newPage.length === 2 && newPage[0] === 'page') {
     (grouped: FileTree<StringFile>, value) => groupByPath(grouped, value.path),
     []
   );
-
   mds.forEach(({ path, url, html, metadata }) => {
-    const navHtml = renderNav(generateIndexInfo(path, groupedMds));
-    const pageHtml = page(tpl, navHtml, html, metadata);
+    const navHtml = renderTopNav(generateIndexInfo(path, groupedMds));
+    const navTopicsHtml = renderTopicNav(generateIndexInfo(path, groupedMds));
+    const navPostsHtml = renderPagesNav(generateIndexInfo(path, groupedMds));
+    const pageHtml = page(tpl, navHtml, navTopicsHtml, navPostsHtml, html, metadata);
     fs.writeFileSync(url, pageHtml);
   });
 

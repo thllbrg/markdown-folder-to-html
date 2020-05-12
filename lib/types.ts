@@ -27,3 +27,8 @@ export interface IndexFile {
   href: string;
   text: string;
 }
+
+export interface PageFile {
+  href: string;
+  text: string;
+}

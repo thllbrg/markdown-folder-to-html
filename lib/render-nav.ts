@@ -1,40 +1,87 @@
-import { FileTree, IndexFile, FileFolder, File } from "./types";
-import assertNever from "./assert-never";
+import { File, FileTree, IndexFile } from "./types";
 
-export default function renderNav(
-  groupedFiles: FileTree<IndexFile>,
-  level = 0
+export function renderTopNav(
+  groupedFiles: FileTree<IndexFile>
 ): string {
   return `<ul>
-${groupedFiles
-  .map(f => {
-    if (f.type === "dir") {
-      const childrenNav = renderNav(f.children, level + 1);
-      const indexFile = getIndexFile(f.children);
-      // Heading with link if there is an index file in the folder
-      if (indexFile) {
-        const link = renderActive(
-          f.name,
-          indexFile.value.href,
-          indexFile.value.active
-        );
-        return `<li class="heading">${link}</li>\n${childrenNav}`;
-      }
-      // Heading without link
-      return `<li class="heading"><span>${f.name}</span></li>\n${childrenNav}`;
-    } else if (f.type === "file") {
-      //  Leaf
-      const { text, href, active } = f.value;
+    ${groupedFiles
+      .filter(f => f.type === "dir")
+      .map(f => {
+        if (f.type === "dir") {
+          const indexFile = getIndexFile(f.children);
+          if (indexFile) {
+            const link = renderActive(
+              f.name,
+              indexFile.value.href,
+              indexFile.value.active
+            );
+            return `<li>${link}</li>\n`;
+          }
+        }
+      })
+      .join("\n")
+      .trim()}
+  </ul>`;
+}
 
-      // Skip index files on nested levels since the Heading links to them.
-      if (level > 0 && text && text.toLowerCase() === "index") return;
+export function renderTopicNav(
+  groupedFiles: FileTree<IndexFile>,
+  render = false
+): string {
+  return `
+    ${render ? '' : '<ul>'}
+    ${groupedFiles
+      .filter(f => f.type === "dir")
+      .map(f => {
+        if (f.type === "dir") {
+          const indexFile = getIndexFile(f.children);
+          if (indexFile && indexFile.value.active) {
+            return `${renderTopicNav(f.children, true)}\n`;
+          } else if (indexFile && render) {
+            const link = renderActive(
+              f.name,
+              indexFile.value.href,
+              indexFile.value.active
+            );
+            return `<li>${link}</li>\n`;
+          }
+        }
+      })
+      .join("\n")
+      .trim()}
+${render ? '' : '</ul>'}`;
+}
 
-      return `<li>${renderActive(text, href, active)}</li>`;
-    }
-    return assertNever(f);
-  })
-  .join("\n")}
-</ul>`;
+export function renderPagesNav(
+  groupedFiles: FileTree<IndexFile>,
+  render = false
+): string {
+  return `
+    ${groupedFiles
+      .map(f => {
+        if (f.type === "dir") {
+          const indexFile = getIndexFile(f.children);
+          if (indexFile && indexFile.value.active) {
+            console.log('current file' + f.name);
+            return `<ul>${renderPagesNav(f.children, true)}</ul>\n`;
+          } else {
+            return `${renderPagesNav(f.children, render)}\n`;
+          }
+        } else if (f.type === "file" && render) {
+
+          if (f.value.text && f.value.text.toLowerCase() === "index") return;
+
+          console.log('sub file: ' + f.value.text);
+          const link = renderActive(
+            f.value.text,
+            f.value.href,
+            false
+          );
+          return `<li>${link}</li>\n`;
+        }
+      })
+      .join("\n")
+      .trim()}`;
 }
 
 function renderActive(text: string, href: string, active: boolean) {
@@ -42,7 +89,5 @@ function renderActive(text: string, href: string, active: boolean) {
 }
 
 function getIndexFile(files: FileTree<IndexFile>): File<IndexFile> | undefined {
-  return files.find(e => e.type === "file" && e.value.text === "index") as File<
-    IndexFile
-  >; // Stupid TS
+  return files.find(e => e.type === "file" && e.value.text === "index") as File<IndexFile>;
 }
